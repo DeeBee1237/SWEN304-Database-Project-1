@@ -1,0 +1,152 @@
+BANKS:
+------
+PRIMARY KEY: (BankName,City)
+I chose this as the primary key because according to the assignment handout:
+The business rules set by the local banking authority ensure that the combination of name and
+city is unique, so that it is not necessary to create an Id for the banks.
+
+FORIEGN KEYS: None for this table
+
+ATTRIBUTE CONSTRAINTS: I made both bank name and city not null because both of these 
+are used for the primary key. The accounts_positive constraint was to ensure that a bank 
+can't have a negative number of accounts or even 0 accounts, as that would make no sense
+in the context of this table.
+
+Robberies:
+----------
+PRIMARY KEY: (BankName,City,DateRobbed)
+The Same bank may have been robbed more than once, therefore (BankName,City) wouldn't have been suitable,
+However it is extremely unlikely (and in the context of this project likely impossible) to have the same
+bank robbed more than once on the same day.
+
+FORIEGN KEYS: (BankName,City) REFERENCES Banks(BankName,City)
+All (BankName,City) Tuples in Robberies must be a subset of all (BankName,City) Tuples in 
+Banks, to ensure that robberies are only stored for banks that actually exist.
+
+ON DELETE/UPDATE JUSTIFICATION: I used CASCADE for both update and delete, because If a Bank no longer
+exists, the robbery becomes irrelevant, and if the bank changes it's name, the robberies refering to that bank should be updated to avoid user confusion.
+
+ATTRIBUTE CONSTRAINTS: I made both bank name and city not null because they are part of the primary key
+and they reference data in the banks table, which will never have null values for either bank name or city.
+stole_something is a constraint I used to check that the amount stolen is never negative and is greater than 0, because if you stole nothing it's not a robbery.
+
+Plans:
+------
+PRIMARY KEY: (BankName,City,PlannedDate,NoRobbers)
+Robbers may plan to rob the same Bank twice, and even though it's most likely impossible to 
+have the same bank robbed twice on the same day, I included Number of robbers to be safer.
+
+FORIEGN KEYS: (BankName,City) REFERENCES Banks (BankName,City)
+All (BankName,City) Tuples in Plans must be a subset of all (BankName,City) Tuples in 
+Banks, to ensure that plans are only made for banks that actually exist.
+
+ON DELETE/UPDATE JUSTIFICATION: I used CASCADE for both delete and update. If a bank no longer
+exists, then the plan becomes irrelivant, and all plans refering to that bank should be deleted. 
+Likewise, if a bank changes it's name the plans that reference that bank should be updated, to 
+avoid confusions for officers.
+
+ATTRIBUTE CONSTRAINTS: robbers_exist is a constraint that checks there is at least one robber who 
+plans to rob a bank, as it would make no sense to have anything less. I made BankName and City NOT NULL
+because they are both crucial to the plan data, so they must have values.
+
+Robbers:
+--------
+PRIMARY KEY: RobberID. This is a SERIAL value, which means a unique autoincrimenting 
+Integer, which is perfect as a primary key.
+
+FORIEGN KEYS: None for this table.
+
+ON DELETE/UPDATE JUSTIFICATION: None.
+
+ATTRIBUTE CONSTRAINTS: I checked that the robbers age is a positive value (I was tempted to make it
+greater than 18, but such a value would be subjective) because negative age makes no sense. I checked
+that the number of years spent in prison is above or at 0 because you can't do negative time, you can do 
+no time and you can spend years in jail. prison_age checks that the robbers age is greater than the amount of time spent in prison, because you can't have been in prison longer than you've been alive.
+
+Skills:
+------
+PRIMARY KEY: SkillId. This is a SERIAL value, which means a unique autoincrimenting 
+Integer, which is perfect as a primary key.
+
+FORIEGN KEYS: None for this table.
+
+ON DELETE/UPDATE JUSTIFICATION: None.
+
+ATTRIBUTE CONSTRAINTS: None.
+
+HasSkills:
+----------
+PRIMARY KEY: (RobberId,SkillId)
+The information "This Robber has this skill" will never be included more than once in the 
+table (in fact it shouldn't, because it'd be repetitive). 
+
+FORIEGN KEYS: 
+(RobberId) REFERENCES Robbers(RobberId)
+
+All RobberId values in the HasSkills table must be a subset of all RobberId values in the 
+Robbers table, to ensure that HasSkills only references robbers that exist.
+
+(SkillId) REFERENCES Skills(SkillId)
+Again, All SkillId values in the HasSkills table must be a subset of all SkillId values in the 
+Skills table, to ensure that HasSkills only references Skills that exist.
+
+ON DELETE/UPDATE JUSTIFICATION: For both Foreign keys, I used ON DELETE CASCADE ON UPDATE RESTRICT.
+If a Robber or Skill is deleted, then the hasSkills record that refers to that robber or skill,
+should be deleted too. I used restrict on update because you shouldn't be allowed to update the RobberID in the robbers table, for any row. It is the primary key and static primary keys are very much ideal. The same reasonng applies to the SkillId Foreign Key.
+
+ATTRIBUTE CONSTRAINTS: None.
+
+HasAccounts:
+------------
+PRIMARY KEY: (RobberId,BankName,City)
+The information "This robber has an account at this unique bank" will never be conveyed more
+than twice, making (RobberId,BankName,City) a unique tuple.
+
+FORIEGN KEYS: 
+(RobberId) REFERENCES Robbers(RobberId)
+Robbers that are referenced in the hasAccounts table must actually exist in the Robbers table
+
+(BankName,City) REFERENCES Banks(BankName,City))
+Banks that are refered to in the hasAccounts table must actually exist in the Banks table
+
+ON DELETE/UPDATE JUSTIFICATION:
+for (RobberId) REFERENCES Robbers(RobberId), I used ON DELETE CASCADE ON UPDATE RESTRICT.
+If you delete a Robber from Robbers, then the information about their accounts should also go.
+However you shouldn't be allowed to update RobberId in the Robbers table, because non static primary keys
+are not ideal, hence UPDATE Restrict.
+
+for (BankName,City) REFERENCES Banks(BankName,City)), I used ON DELETE CASCADE ON UPDATE CASCADE.
+If a bank refered to is deleted or it's name is updated, then all hasAccounts records that reference
+that bank should be deleted or updated accordingly. Because Robbers can't have an account at a non existing bank, and name changes should be updated here too, to avoid confusion
+
+ATTRIBUTE CONSTRAINTS: Bank Name and City are important information to this table so I made them both not null. If null were allowed, then there'd be no point inserting the record: if a robber has an account at bank null, then they shouldn't be in this table.
+
+
+Accomplices:
+------------
+
+PRIMARY KEY: (RobberId,BankName,City,RobberyDate)
+The information "This robber helped rob this particular bank on this day" will 
+never be conveyed more than once in the table.
+
+FORIEGN KEYS:
+(RobberId) REFERENCES Robbers(RobberId)
+An Accomplice should be a Robber that actually exists in the robbers table.
+
+(BankName,City,RobberyDate) REFERENCES Robberies(BankName,City,DateRobbed)
+Accomplices data that is inserted should always refer to robberies that exist in Robberies.
+
+ON DELETE/UPDATE JUSTIFICATION:
+for (RobberId) REFERENCES Robbers(RobberId) I used ON DELETE CASCADE ON UPDATE RESTRICT.
+If Robbers are deleted, then their accomplice records should also be deleted, however 
+restrict was used on update to prevent changing the primary key value in the robbers table.
+
+for (BankName,City,RobberyDate) REFERENCES Robberies(BankName,City,DateRobbed) I used 
+ON DELETE RESTRICT ON UPDATE RESTRICT because you shouldn't change a (BankName,City) tuple in the
+Robberies table, you should change it in the Banks table. And Robberies has a CASCADE on update and
+delete, meaning that if you change/delete a (BankName,City) tuple in banks, robberies will be updated.
+Basically to ensure db users will delete/update from banks rather than Robberies
+
+ATTRIBUTE CONSTRAINTS: BankName and City are important in conveying which bank was robbed 
+by the accomplice, so I made them both not null. I checked the Share is >0 because a negative share 
+makes no sense in this context, neither does no share at all.
