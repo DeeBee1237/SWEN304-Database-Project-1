@@ -1,3 +1,18 @@
+-- Alternative single nested query:
+-- SELECT s.description as description,
+-- r.robberid as robberid,
+-- r.nickname as nickname
+-- FROM (select s.description as description,
+-- h.robberid as robber_id
+-- FROM hasskills h 
+-- JOIN skills s 
+-- ON h.skillid = s.skillid
+-- ORDER BY description) as s 
+-- JOIN Robbers r
+-- ON r.robberid = s.robber_id;
+
+DROP VIEW IF EXISTS SkillsAndRobbers CASCADE;
+
 -- a view showing all the skill descriptions in their own chunks
 -- allong with which robbers posses each of the skills:
 CREATE VIEW SkillsAndRobbers as (

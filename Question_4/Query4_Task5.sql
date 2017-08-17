@@ -1,3 +1,19 @@
+-- Alternative single, nested query:
+-- SELECT r.robberid as robber_id,
+-- r.nickname as nickname,
+-- i.earnings as individual_earnings
+-- FROM (SELECT * FROM 
+-- (SELECT robberid,
+-- SUM(share) as earnings 
+-- FROM accomplices 
+-- GROUP BY robberid) 
+-- as robbery_earnings
+-- WHERE earnings > 30000) as i
+-- JOIN Robbers r
+-- ON i.robberid = r.robberid
+-- ORDER BY individual_earnings DESC;
+
+DROP VIEW IF EXISTS individualEarningsOver3k CASCADE;
 -- Create a view that displays the robber id for all robbers who 
 -- earned over 30,000 dollars, as well as the total amount they made.
 CREATE VIEW individualEarningsOver3k as (
