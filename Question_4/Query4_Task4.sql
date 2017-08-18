@@ -1,6 +1,6 @@
 SELECT bankname,city 
 FROM Robberies 
-ORDER BY daterobbed
+ORDER BY daterobbed ASC 
 LIMIT 1;
 
 --        bankname       |         city         
