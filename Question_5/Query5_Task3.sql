@@ -59,7 +59,7 @@ Join (SELECT DISTINCT a.robberid as robber_id,
 b.security as security_level
 FROM Banks b 
 JOIN Accomplices a 
-ON b.bankname = a.bankname 
+ON b.bankname = a.bankname
 AND b.city = a.city
 ORDER BY security_level) r_a_s
 ON h.robberid = r_a_s.robber_id) sls
